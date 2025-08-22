@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura - Your AI Companion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--darker), #1a1f36);
+            color: var(--light);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item {
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .sidebar-item.active {
+            background: rgba(99, 102, 241, 0.3);
+            color: var(--primary);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .user-message .message-header {
+            color: white;
+        }
+
+        .ai-message .message-header {
+            color: var(--primary);
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--gray);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.7);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+
+        .message-input::placeholder {
+            color: var(--gray);
+        }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .voice-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-left: 10px;
+        }
+
+        .voice-button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .voice-button.listening {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-robot"></i> Aura</h1>
+            <p>Your intelligent AI companion</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3><i class="fas fa-user-friends"></i> Conversations</h3>
+                <div class="sidebar-item active">
+                    <i class="fas fa-comment"></i> Current Chat
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-history"></i> Chat History
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-cog"></i> Settings
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-question-circle"></i> Help
+                </div>
+
+                <h3 style="margin-top: 30px;"><i class="fas fa-magic"></i> Features</h3>
+                <div class="sidebar-item">
+                    <i class="fas fa-microphone"></i> Voice Chat
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-language"></i> Translation
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-lightbulb"></i> Creative Mode
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai-message">
+                        <div class="message-header">
+                            <i class="fas fa-robot"></i> Aura
+                        </div>
+                        <div class="message-content">
+                            Hello! I'm Aura, your AI companion. How can I help you today? You can type your message or click the microphone to speak!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-container">
+                        <input type="text" class="message-input" id="messageInput" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                        <button class="send-button" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        <button class="voice-button" id="voiceButton" onclick="startVoiceChat()">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <div class="status-bar">
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span>Online and ready</span>
+                        </div>
+                        <div class="status-info">
+                            <i class="fas fa-shield-alt"></i> Secure Connection
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const voiceButton = document.getElementById('voiceButton');
+
+        function addMessage(content, isUser = false, sender = '') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            const senderName = isUser ? 'You' : (sender || 'Aura');
+            const icon = isUser ? 'fas fa-user' : 'fas fa-robot';
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <i class="${icon}"></i> ${senderName}
+                </div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <i class="fas fa-robot"></i>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+            
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({message: message})
+                });
+                
+                const data = await response.json();
+                hideTypingIndicator();
+                addMessage(data.response, false, 'Aura');
+                
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('Sorry, I encountered an error. Please try again.', false, 'Aura');
+            }
+        }
+
+        async function startVoiceChat() {
+            voiceButton.classList.add('listening');
+            voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+            
+            try {
+                const response = await fetch('/voice_chat', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.user_input && !data.user_input.startsWith('Sorry')) {
+                    addMessage(data.user_input, true, 'You (Voice)');
+                }
+                
+                if (data.response) {
+                    showTypingIndicator();
+                    // Simulate processing time
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        addMessage(data.response, false, 'Aura');
+                    }, 1000);
+                }
+                
+            } catch (error) {
+                addMessage('Voice recognition error. Please try again.', false, 'Aura');
+            } finally {
+                voiceButton.classList.remove('listening');
+                voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Auto-scroll to bottom on load
+        scrollToBottom();
+    </script>
+</body>
+</html>
