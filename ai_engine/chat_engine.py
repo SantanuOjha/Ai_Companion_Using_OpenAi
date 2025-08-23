@@ -1,3 +1,108 @@
+<<<<<<< HEAD
+import google.generativeai as genai
+from config import GOOGLE_API_KEY, COMPANION_PERSONALITY
+from database.supabase_db import SupabaseDB
+import logging
+
+logger = logging.getLogger(__name__)
+
+class ChatEngine:
+    def __init__(self, db=None):
+        self.use_mock = False
+        self.db = db or SupabaseDB()
+        self.conversation_history = []
+        
+        # Configure Gemini
+        if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
+            try:
+                genai.configure(api_key=GOOGLE_API_KEY)
+                self.model = genai.GenerativeModel('gemini-pro')
+                # Test connection
+                test_prompt = "Respond with 'OK' only"
+                response = self.model.generate_content(test_prompt)
+                if response.text:
+                    logger.info("Google Gemini API connected successfully")
+                else:
+                    raise Exception("Empty response from API")
+            except Exception as e:
+                logger.error(f"Gemini API connection failed: {e}")
+                self.use_mock = True
+        else:
+            logger.warning("No valid Google API key found. Using mock mode.")
+            self.use_mock = True
+    
+    def get_mock_response(self, user_message):
+        """Enhanced mock responses"""
+        user_message = user_message.lower()
+        
+        if any(word in user_message for word in ['weather', 'temperature', 'rain', 'sun']):
+            return "I don't have access to real-time weather data, but I'd be happy to help you find weather information or discuss weather patterns!"
+        
+        if any(word in user_message for word in ['time', 'clock', 'hour']):
+            return "I don't have access to real-time clock data, but you can check your device for the current time."
+        
+        if any(word in user_message for word in ['name', 'who are you']):
+            return "I'm Aura, your AI companion! I'm here to chat, help with questions, and be a friendly presence."
+        
+        if any(word in user_message for word in ['hello', 'hi', 'hey']):
+            return "Hello there! I'm Aura, your AI companion. How can I help you today?"
+        
+        if 'help' in user_message:
+            return "I can chat with you, answer questions, help with creative tasks, and more! Try asking me about anything you're curious about."
+        
+        if any(word in user_message for word in ['bye', 'goodbye', 'see you']):
+            return "Goodbye! Feel free to come back anytime you want to chat. I'll be here!"
+        
+        # Default response
+        return "I'm Aura, your AI companion! I'm here to have a meaningful conversation with you. What would you like to talk about?"
+    
+    def get_response(self, user_message, user_id=None):
+        """Generate response with context awareness"""
+        if self.use_mock:
+            return self.get_mock_response(user_message)
+        
+        try:
+            # Get conversation context from database
+            context = ""
+            if user_id:
+                context = self.db.get_conversation_context(user_id)
+            
+            # Build prompt with personality and context
+            prompt = f"""
+{COMPANION_PERSONALITY}
+
+Conversation context:
+{context}
+
+User: {user_message}
+Aura:"""
+            
+            # Generate response
+            response = self.model.generate_content(prompt)
+            
+            if response.text:
+                ai_response = response.text.strip()
+                
+                # Save messages to database
+                if user_id:
+                    self.db.save_chat_message(user_id, 'user', user_message)
+                    self.db.save_chat_message(user_id, 'assistant', ai_response)
+                
+                return ai_response
+            else:
+                return "I'm having trouble formulating a response right now. Could you try asking again?"
+                
+        except Exception as e:
+            logger.error(f"Gemini API error: {e}")
+            return "Sorry, I'm experiencing some technical difficulties. Let's continue our conversation!"
+    
+    def clear_history(self):
+        self.conversation_history = []
+    
+    def get_history(self, user_id):
+        """Get chat history for user"""
+        return self.db.get_user_chats(user_id)
+=======
 import google.generativeai as genai
 from config import GOOGLE_API_KEY, COMPANION_PERSONALITY
 import os
@@ -96,3 +201,4 @@ Aura:"""
     
     def clear_history(self):
         self.conversation_history = []
+>>>>>>> 44168a780ffe20832cc5b64a57dfbe35a56e354d
